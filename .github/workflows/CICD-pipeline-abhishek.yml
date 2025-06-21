@@ -1,13 +1,13 @@
 name: Abhishek CI/CD Pipeline
- 
+
 on:
   push:
     branches: [main]
   workflow_dispatch:
- 
+
 env:
   IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/abhishek_github
- 
+
 jobs:
   build:
     name: Build and Push Docker Image
@@ -15,16 +15,17 @@ jobs:
     permissions:
       contents: read
       packages: write
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
- 
+
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
- 
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
@@ -33,13 +34,18 @@ jobs:
           tags: ${{ env.IMAGE_NAME }}:${{ github.sha }}
           build-args: |
             APP_VERSION=${{ github.sha }}
- 
+
   deploy:
     name: Deploy to EC2
     needs: build
     runs-on: ubuntu-latest
+
     steps:
-      - name: Deploy via SSH to EC2
+      - name:  DEBUG - Check SSH Key Format
+        run: |
+          echo "${{ secrets.EC2_SSH_KEY }}" | head -n 2
+
+      - name:  Deploy via Appleboy SSH to EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -53,3 +59,10 @@ jobs:
             sudo docker rm my-app-container || true
             sudo docker run -d --name my-app-container --restart always -p 3000:3000 ${{ env.IMAGE_NAME }}:${{ github.sha }}
             sudo docker image prune -a -f
+
+      # Uncomment below block ONLY if appleboy/ssh-action fails and you want to test raw ssh
+      # - name: 🔧 Raw SSH Test (Optional Fallback)
+      #   run: |
+      #     echo "${{ secrets.EC2_SSH_KEY }}" > key.pem
+      #     chmod 600 key.pem
+      #     ssh -o StrictHostKeyChecking=no -i key.pem ec2-user@${{ secrets.EC2_HOST }} "echo ✅ SSH to EC2 succeeded"
