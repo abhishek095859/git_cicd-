@@ -60,9 +60,3 @@ jobs:
             sudo docker run -d --name my-app-container --restart always -p 3000:3000 ${{ env.IMAGE_NAME }}:${{ github.sha }}
             sudo docker image prune -a -f
 
-      # Uncomment below block ONLY if appleboy/ssh-action fails and you want to test raw ssh
-      # - name: 🔧 Raw SSH Test (Optional Fallback)
-      #   run: |
-      #     echo "${{ secrets.EC2_SSH_KEY }}" > key.pem
-      #     chmod 600 key.pem
-      #     ssh -o StrictHostKeyChecking=no -i key.pem ec2-user@${{ secrets.EC2_HOST }} "echo ✅ SSH to EC2 succeeded"
