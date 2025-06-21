@@ -58,13 +58,45 @@ jobs:
 
             APP_VERSION=${{ github.sha }}
  
+  ssh-test:
+
+    name: Test SSH Connection to EC2
+
+    runs-on: ubuntu-latest
+
+    needs: build
+
+    steps:
+
+      - name: Test SSH connection
+
+        uses: appleboy/ssh-action@v1.0.3
+
+        with:
+
+          host: ${{ secrets.EC2_HOST }}
+
+          username: ${{ secrets.EC2_USERNAME }}
+
+          key: ${{ secrets.EC2_SSH_KEY }}
+
+          port: 22
+
+          debug: true
+
+          script: |
+
+            whoami
+
+            hostname
+ 
   deploy:
 
     name: Deploy to EC2
 
-    needs: build
-
     runs-on: ubuntu-latest
+
+    needs: ssh-test
 
     steps:
 
@@ -81,8 +113,6 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
 
           port: 22
-
-          debug: true
 
           script: |
 
